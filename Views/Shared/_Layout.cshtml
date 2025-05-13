@@ -9,33 +9,6 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/GoogleAnalyticsMvcDemo.styles.css" asp-append-version="true" />
     <script id="usercentrics-cmp" src="https://web.cmp.usercentrics.eu/ui/loader.js" data-settings-id="Ue2jdOfdA_MT3r" async></script>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PPH15117HN"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-PPH15117HN');
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-          const button = document.getElementById("trackBtn");
-          const input = document.getElementById("searchInput");
-
-          button.addEventListener("click", function () {
-            const userInput = input.value;
-
-            gtag('event', 'search_input', {
-              'event_category': 'User Interaction',
-              'event_label': 'Search Box',
-              'value': userInput
-            });
-
-            console.log("Custom event sent:", userInput);
-          });
-        });
-    </script>
 </head>
 <body>
     <header>
@@ -70,9 +43,47 @@
             &copy; 2025 - GoogleAnalyticsMvcDemo - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        function trackCustomEvent() {
+            const button = document.getElementById("trackBtn");
+            const input = document.getElementById("searchInput");
+
+            if (!button || !input) return;
+
+            button.addEventListener("click", function () {
+                const userInput = input.value;
+
+                if (typeof gtag === "function") {
+                    gtag('event', 'search_input', {
+                        'event_category': 'User Interaction',
+                        'event_label': 'Search Box',
+                        'value': userInput
+                    });
+                    console.log("Custom GA event sent:", userInput);
+                } else {
+                    console.warn("gtag not available. Did user consent?");
+                }
+            });
+        }
+
+        // Wait for Usercentrics to initialize
+        window.addEventListener("UC_UI_INITIALIZED", function () {
+            console.log("Usercentrics initialized");
+
+            const waitForGA = setInterval(() => {
+                if (typeof gtag === "function") {
+                    clearInterval(waitForGA);
+                    trackCustomEvent(); // Bind click after GA is ready
+                }
+            }, 300);
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
